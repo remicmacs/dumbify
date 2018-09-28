@@ -8,28 +8,46 @@
         return;
     }
     window.hasRun = true;
+
+    // Core library
     const tossCoin = () => Math.random() >= 0.5;
-
     const randCase = c => tossCoin() ? c.toUpperCase() : c.toLowerCase();
-
     const dumbify = (s) => s.split('').map(randCase).join('');
+    const nodeFilter = (node) => {
+        if ( ! /^\s*$/.test(node.data) ) {
+            return NodeFilter.FILTER_ACCEPT;
+        } else if (node.nodeType !== 3) return NodeFilter.FILTER_REJECT;
+    };
+
+    const textNodesUnder = (el) => {
+        let node;
+        let ary=[];
+        let walker = document.createTreeWalker(
+            el,
+            NodeFilter.SHOW_TEXT,
+            { acceptNode: nodeFilter
+            },
+            false
+        );
+        while(node = walker.nextNode()) ary.push(node);
+        return ary;
+    };
 
     const selectTextNode = () => {
         const body = document.querySelector('body');
-        // There must be a better way...
-        const megaSelector = 'a,abbr,b,blockquote,button,caption,code,data,' +
-            'dd,dt,dfn,figcaption,h1,h2,h3,h4,h5,h6,i,legend,li,kbd,mark,p,' +
-            'q,s,samp,small,strong,td,th';
-        const candidates = Array.from(body.querySelectorAll(megaSelector));
-        return candidates;
+        const nodes = textNodesUnder(body);
+        return nodes;
     }
 
     browser.runtime.onMessage.addListener((message) => {
         selectTextNode();
         if (message.command === "dumbify") {
-            let ary = selectTextNode();
+            const displayNow = (elt) => {
+                console.log(elt.data);
+            };
+            const ary = selectTextNode();
             for (elt of ary) {
-                elt.innerHTML = dumbify(elt.innerHTML);
+                elt.data = dumbify(elt.data);
             }
         // Other messages handling ?
         } else {
