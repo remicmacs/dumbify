@@ -14,22 +14,24 @@
 
     const dumbify = (s) => s.split('').map(randCase).join('');
 
-    // @TODO: Finish this!!
     const selectTextNode = () => {
         const body = document.querySelector('body');
-
-        const findChildTextNodes = (node) => {
-            return node;
-        }
-    
+        // There must be a better way...
+        const megaSelector = 'a,abbr,b,blockquote,button,caption,code,data,' +
+            'dd,dt,dfn,figcaption,h1,h2,h3,h4,h5,h6,i,legend,li,kbd,mark,p,' +
+            'q,s,samp,small,strong,td,th';
+        const candidates = Array.from(body.querySelectorAll(megaSelector));
+        return candidates;
     }
 
     browser.runtime.onMessage.addListener((message) => {
+        selectTextNode();
         if (message.command === "dumbify") {
-            let ary = document.querySelectorAll('p');
-            for (p of ary) {
-                p.innerHTML = dumbify(p.innerHTML);
+            let ary = selectTextNode();
+            for (elt of ary) {
+                elt.innerHTML = dumbify(elt.innerHTML);
             }
+        // Other messages handling ?
         } else {
             console.err('This is not the message you are looking for');
         }
